@@ -1,55 +1,101 @@
 import Image from "next/image";
 import Link from "next/link";
+import { getHomePageData, getSiteContent } from "@/lib/shopify";
 
-export default function Home() {
+function firstColor(list = [], key) {
+  return list.find((c) => c?.[key])?.[key] || "";
+}
+
+function pickBrandColors(colors) {
+  if (!colors) return {};
+  const primaryBg = firstColor(colors.primary, "background");
+  const primaryFg = firstColor(colors.primary, "foreground");
+  const secondaryBg = firstColor(colors.secondary, "background");
+  const secondaryFg = firstColor(colors.secondary, "foreground");
+  return {
+    primaryBg,
+    primaryFg,
+    secondaryBg,
+    secondaryFg,
+  };
+}
+
+export default async function Home() {
+  const [homePageData, siteContent] = await Promise.all([
+    getHomePageData(),
+    getSiteContent(),
+  ]);
+
+  const colors = pickBrandColors(siteContent?.brand?.colors);
+  const primaryForeground = colors.primaryFg || "#0E6A36";
+  const primaryBackground = colors.primaryBg || "#B7D9B3";
+
+  const title = homePageData?.title || "Authentic Taste of\nAgua Fresca";
+  const ctaText = homePageData?.ctaText || "Explore";
+  const ctaLink = homePageData?.ctaLink || "/collections/drinks";
+  const heroImage = homePageData?.heroImage || "/default_image.jpg";
+
   return (
-    <section className="relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#b6dfb4] via-[#bde3b8] to-[#c1e4bf]" />
-      <div className="absolute inset-x-[-5%] bottom-[-15%] h-[40vh] min-h-[220px] rounded-[50%] bg-[#f6f0e9] blur-[1px]" />
+    <section 
+      className="relative overflow-hidden"
+      style={{ backgroundColor: primaryBackground, minHeight: "100vh" }}
+    >
+      <div className="relative mx-auto flex min-h-[calc(100vh-120px)] max-w-6xl flex-col items-center justify-center px-6 pt-20 pb-0 text-center">
+        <div className="flex flex-col items-center gap-6 mb-0">
+          <h1 
+            className="whitespace-pre-line"
+            style={{ 
+              fontFamily: "var(--font-figtree), sans-serif",
+              fontWeight: 700,
+              fontSize: "100px",
+              lineHeight: "100%",
+              letterSpacing: "-0.01em",
+              textAlign: "center",
+              color: primaryForeground
+            }}
+          >
+            {title}
+          </h1>
 
-      <div className="relative mx-auto flex min-h-[80vh] max-w-6xl flex-col items-center justify-center gap-8 px-6 pb-20 pt-16 text-center">
-        <h1 className="text-4xl font-black leading-tight text-[#0f5a30] sm:text-5xl md:text-6xl">
-          Authentic Taste of
-          <br />
-          Agua Fresca
-        </h1>
-
-        <Link
-          href="/collections/drinks"
-          className="inline-flex items-center gap-2 rounded-full bg-[#0f5a30] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-[#0f5a30]/20 transition hover:-translate-y-0.5 hover:bg-[#0c4d28]"
-        >
-          Explore
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#0f5a30]">
-            <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
+          <Link
+            href={ctaLink}
+            className="inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+            style={{ 
+              fontFamily: "var(--font-figtree), sans-serif",
+              backgroundColor: primaryForeground
+            }}
+          >
+            {ctaText}
+            <svg viewBox="0 0 16 16" className="h-4 w-4" aria-hidden="true">
               <path
                 d="M6 12.5 11 8 6 3.5v9z"
                 fill="currentColor"
               />
             </svg>
-          </span>
-        </Link>
+          </Link>
+        </div>
+      </div>
 
-        <div className="relative mt-6 flex w-full max-w-5xl justify-center">
-          <HeroImage />
+      <div className="relative w-full mt-auto">
+        <div className="mx-auto flex max-w-6xl items-end justify-center px-6">
+          <HeroImage src={heroImage} />
         </div>
       </div>
     </section>
   );
 }
 
-function HeroImage() {
-  const src = "/hero-drinks.svg"; 
-
+function HeroImage({ src }) {
   return (
-    <div className="relative w-full max-w-4xl">
-      <div className="absolute inset-x-[8%] bottom-[-6%] h-20 rounded-full bg-[#e3dbc5] blur-2xl" />
+    <div className="relative w-full flex items-end justify-center">
       <Image
         src={src}
         alt="Assorted Juicy Whip aguas frescas"
         width={1600}
-        height={1200}
+        height={600}
         priority
-        className="relative z-10 h-auto w-full object-contain"
+        className="h-auto w-full max-w-5xl object-contain object-bottom"
+        style={{ marginTop: "-20px" }}
       />
     </div>
   );
